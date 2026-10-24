@@ -153,4 +153,16 @@ export interface TilePulseCardConfig {
   show_names?: boolean;
   /** Hide the buttons while the main entity is off or unavailable (default false). */
   hide_actions_when_off?: boolean;
+  /**
+   * Home Assistant's own tile features (a brightness slider, fan speed, target temperature, ...) between the
+   * tile and the buttons, in the same YAML as the native tile card. Drawn by HA's own elements; when those
+   * can't be loaded, nothing is drawn.
+   */
+  features?: TileFeatureConfig[];
+}
+
+/** One native tile feature, as the tile card takes it: `type` plus that feature's own options. */
+export interface TileFeatureConfig {
+  type: string;
+  [key: string]: unknown;
 }

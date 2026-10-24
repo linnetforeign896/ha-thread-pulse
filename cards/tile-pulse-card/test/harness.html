@@ -86,6 +86,24 @@
       document.body.style.fontFamily = "var(--ha-font-family-body)";
     }
   }
+  // ?features=1: a stand-in for HA's own feature elements (hui-card-features), the way a dashboard with a
+  // native tile on it has them loaded. Without it the features scenario shows the fallback: no features.
+  if (new URLSearchParams(location.search).has("features")) {
+    customElements.define("hui-card-features", class extends HTMLElement {
+      set hass(h) { this._hass = h; this.draw(); }
+      set features(f) { this._features = f; this.draw(); }
+      set context(c) { this._context = c; this.draw(); }
+      set color(c) { this._color = c; this.draw(); }
+      draw() {
+        if (!this._hass || !this._features || !this._context) return;
+        const s = this._hass.states[this._context.entity_id];
+        const pct = s?.attributes.percentage ?? Math.round(((s?.attributes.brightness ?? 0) * 100) / 255);
+        const fill = this._color ? `color-mix(in srgb, ${this._color} 55%, transparent)` : "color-mix(in srgb, var(--primary-text-color) 20%, transparent)";
+        this.style.cssText = "display:flex;flex-direction:column;gap:8px";
+        this.innerHTML = this._features.map((f) => `<div title="${f.type}" style="height:42px;border-radius:12px;overflow:hidden;position:relative;background:color-mix(in srgb,var(--primary-text-color) 6%,transparent)"><div style="height:100%;width:${pct}%;background:${fill}"></div><span style="position:absolute;left:12px;top:12px;font:12px system-ui;color:var(--secondary-text-color)">${f.type}</span></div>`).join("");
+      }
+    });
+  }
   import "../../../dist/pulse-cards.js";
 
   const q = new URLSearchParams(location.search);
@@ -118,7 +136,7 @@
   // A thermostat: its HVAC modes become the buttons.
   add("climate.kids_room", "heat", { friendly_name: "Kids' Room", hvac_modes: ["off", "heat", "cool", "auto"], current_temperature: 21.5, temperature: 22 }, 95);
   // Kitchen: a light with unrelated buttons (a scene, a script, the hood, a view).
-  add("light.kitchen", "on", { friendly_name: "Kitchen", supported_color_modes: ["brightness"] }, 15);
+  add("light.kitchen", "on", { friendly_name: "Kitchen", supported_color_modes: ["brightness"], brightness: 170 }, 15);
   add("scene.kitchen_cooking", "2026-10-09T18:00:00Z", { friendly_name: "Cooking" }, 900);
   add("script.coffee", "off", { friendly_name: "Coffee" }, 600);
   add("switch.kitchen_hood", "on", { friendly_name: "Hood", icon: "mdi:stove" }, 8);
@@ -223,6 +241,8 @@
     },
     { col: 2, cap: "Six modes, icon-only, 3 per row", config: { entity: "humidifier.nursery", show_names: false, columns: 3 } },
     { col: 2, cap: "The mode select is unavailable: buttons dimmed", config: { entity: "switch.hall_purifier" } },
+    { col: 2, cap: "Issue #17: native tile features between the tile and the buttons (open with ?features=1; without, nothing is drawn)", config: { entity: "fan.office_fan", features: [{ type: "fan-speed" }] } },
+    { col: 2, cap: "A light with a brightness slider and its buttons", config: { entity: "light.kitchen", vertical: false, features: [{ type: "light-brightness" }], actions: [{ entity: "scene.kitchen_cooking", icon: "mdi:chef-hat" }, { entity: "script.coffee", icon: "mdi:coffee" }] } },
     { col: 2, cap: "Half-width cards in a sections view: names go under the icons", pair: true, configs: [{ entity: "switch.living_purifier" }, { entity: "fan.office_fan" }] },
   ];
 

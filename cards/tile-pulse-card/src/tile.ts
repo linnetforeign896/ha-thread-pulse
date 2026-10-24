@@ -6,6 +6,7 @@ import type {
   StateContent,
   TileActionConfig,
   TileButtonRowConfig,
+  TileFeatureConfig,
   TilePulseCardConfig,
 } from "./types";
 
@@ -466,4 +467,15 @@ export function stateColor(s: HassEntity, color?: string): string {
   const d = domainOf(s.entity_id);
   const st = s.state.replace(/[^a-z0-9_]/gi, "_");
   return `var(--state-${d}-${st}-color, var(--state-${d}-active-color, var(--state-active-color, var(--tpc-active))))`;
+}
+
+/**
+ * The configured native tile features HA can draw: objects with a `type`. Anything else is dropped, so a
+ * stray YAML value can't break the card. Empty when `features` is not set.
+ */
+export function cardFeatures(config: Pick<TilePulseCardConfig, "features">): TileFeatureConfig[] {
+  if (!Array.isArray(config.features)) return [];
+  return config.features.filter(
+    (f): f is TileFeatureConfig => !!f && typeof f === "object" && !Array.isArray(f) && typeof f.type === "string" && f.type.trim() !== ""
+  );
 }

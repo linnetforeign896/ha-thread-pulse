@@ -105,15 +105,26 @@ export type PresetId =
   | "fans_off"
   | "media_stop"
   | "vacuum_area"
-  | "everything_off";
+  | "everything_off"
+  | "scene"
+  | "climate_setpoint"
+  | "media_play_pause"
+  | "media_next";
 
 export interface QuickActionConfig {
   /** Optional built-in behaviour. When set, `tap_action` is generated unless you override it. */
   preset?: PresetId;
   name?: string;
   icon?: string;
-  /** Entity used for state colour, default toggling, and as target for vacuum_area. */
+  /**
+   * Entity used for state colour, default toggling, and as the target of `vacuum_area`, `scene`,
+   * `climate_setpoint` and the media presets (those three fall back to the area's own entities).
+   */
   entity?: string;
+  /** `climate_setpoint`: the temperature a tap sets. */
+  temperature?: number;
+  /** `climate_setpoint`: how much a tap raises (positive) or lowers (negative) the set point instead. */
+  step?: number;
   tap_action?: ActionConfig;
   hold_action?: ActionConfig;
   double_tap_action?: ActionConfig;

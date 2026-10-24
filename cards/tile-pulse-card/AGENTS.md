@@ -54,14 +54,14 @@ Don't write a commit message unless he asks for one. If he does, offer it as a s
 | File | What lives there |
 | --- | --- |
 | `src/tile-pulse-card.ts` | The element: `setConfig`, `getStubConfig` (a fan/climate/humidifier/… first), `getConfigElement`, `getGridOptions`, `getCardSize`, `willUpdate` (caches discovery, clears pending taps), `shouldUpdate` (watched entities only), `render` (tile + button rows), the pending-tap state and `_fire` (every action goes out as `hass-action`). Holds `VERSION`. |
-| `src/tile.ts` | Pure logic. Option kinds per domain (`optionsOf`, `optionActive`, `optionAction`, `optionLabel`), `guessOptionIcon` (English + Greek), `discoverActionEntity`, `resolveActions` (the first row's buttons, lit/disabled), `resolveRows` (that row plus each of `button_rows`, with its columns; keys carry the row so pending taps stay per button), `numberSteps` (a number's handful of values as options), `withPending` (optimistic lit button), `entityAction`/`defaultIconTap` (safe toggles only), `contentParts` (the line under the name), `isActive`/`isOff`, `watchedEntities`, `balanceRows`, `cssColor`, `stateColor`. |
+| `src/tile.ts` | Pure logic. Option kinds per domain (`optionsOf`, `optionActive`, `optionAction`, `optionLabel`), `guessOptionIcon` (English + Greek), `discoverActionEntity`, `resolveActions` (the first row's buttons, lit/disabled), `resolveRows` (that row plus each of `button_rows`, with its columns; keys carry the row so pending taps stay per button), `numberSteps` (a number's handful of values as options), `withPending` (optimistic lit button), `entityAction`/`defaultIconTap` (safe toggles only), `contentParts` (the line under the name), `isActive`/`isOff`, `watchedEntities`, `balanceRows`, `cssColor`, `stateColor`, `cardFeatures` (the native features HA can draw). |
 | `src/action-handler.ts` | Tap / hold / double-tap handling (copied from the family, event renamed `tpc-action`). |
 | `src/editor.ts` | Visual editor on `ha-form` selectors and the reorderable button list; "More rows of buttons" lists `button_rows`, each with its options entity, columns and its own button list (row `-1` is the card's own `actions`). `state_content` is split into the known items (a reorderable list) and `info_entities` (an entity list) and merged back. Defaults are kept out of the YAML. "Customise these buttons" writes the automatic buttons out. |
 | `src/types.ts` | Config types and the slice of the HA frontend API the card uses. |
 | `src/localize.ts` | All user-facing strings (`en`, `el`), `localize`, `relativeTime`. |
 | `src/styles.ts` | Card CSS. Colours, radii, gaps and motion go through `--tpc-*` variables that read `--pulse-*` first, then HA variables, then literals. |
 | `test/tile.test.mjs` | `node:test` unit tests for `src/tile.ts`. |
-| `test/harness.html`, `test/icons.js` | Browser harness with a mock `hass` that answers option and toggle actions after a short delay (to see the pending state), and stubbed `ha-card`/`ha-icon`/`ha-state-icon`. `icons.js` holds the MDI paths the card and harness use (generated from `@mdi/js`). |
+| `test/harness.html`, `test/icons.js` | Browser harness (`?features=1` stubs HA's `hui-card-features`) with a mock `hass` that answers option and toggle actions after a short delay (to see the pending state), and stubbed `ha-card`/`ha-icon`/`ha-state-icon`. `icons.js` holds the MDI paths the card and harness use (generated from `@mdi/js`). |
 | `dist/pulse-cards.js` | The built bundle. **Committed on purpose**: HACS serves it and CI fails if it is out of date. |
 
 Rule of thumb: logic that does not need the DOM goes in `tile.ts` and gets a test. The card renders what `tile.ts` decides.
@@ -101,13 +101,14 @@ Config type (`types.ts`) → logic + test (`tile.ts`, `test/tile.test.mjs`) → 
 
 - **Option kinds.** `OPTION_KINDS` in `tile.ts` is the only place that knows where each domain keeps its options and which service sets one. Climate is special: an option in `hvac_modes` sets the HVAC mode, else one in `preset_modes` sets the preset. Add a domain there and in the editor's `OPTION_DOMAINS`, with a test.
 - **The icon inside the tile.** The icon is a button inside the tile's own action target; it stops `pointerdown`/`pointerup`/`keydown`/`click` from bubbling so one press never fires both.
+- **Native features** (`features`, issue #17). The card embeds HA's own `hui-card-features` with `.hass`, `.context = { entity_id }` (one object per entity, so it doesn't re-render), `.features` (`cardFeatures` drops entries HA can't draw) and `.color` (the state colour while on). That element ships with HA's tile card, which loads lazily: `loadFeatureElements` creates one native tile through `loadCardHelpers` and waits (5 s at most) for the element. Without it the card draws no features, nothing else changes. HA 2025.7 (our minimum) has the element with this API; if HA changes it, only the features go missing.
 - **Pending taps.** Keyed by button, one per entity (the latest wins), cleared in `willUpdate` when the entity's state object changes, by an 8-second timer, on `setConfig` and on disconnect.
 
 ## Where it can evolve
 
 Options, not a to-do list; ask first; behind config.
 
-- Native tile *features* (a brightness or fan-speed slider) above the buttons, by embedding HA's own feature elements.
+- HA's own features editor (`hui-card-features-editor`) in the visual editor instead of the YAML box for `features`; it needs the sub-editor for features with options (`edit-detail-element`).
 - A `visibility`/`conditions` per button (show "Boost" only when PM2.5 is high).
 - A long-press menu with the rest of the options when an entity has more than six.
 - Small badges on buttons (a filter-life warning on a "Filter" button).
@@ -121,6 +122,7 @@ Options, not a to-do list; ask first; behind config.
 - Discovery against real devices: the purifier's switch + mode select on one device, entity categories, hidden entities.
 - Real option labels and icons from integrations' translations (`formatEntityState`, `formatEntityAttributeValue`), and HA's state colours per domain.
 - The pending state with a slow cloud device (and that it clears when nothing changes).
+- `features`: HA's own sliders draw, follow the state colour, and work on a phone; the YAML box in the editor round-trips.
 - Confirmation dialogs, `navigate`, more-info on hold, the phone app, custom and Pulse themes.
 
 ## Conventions

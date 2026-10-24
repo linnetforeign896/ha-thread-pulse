@@ -390,7 +390,7 @@ export class ScenePulseCard extends LitElement {
         aria-label=${`${this._t("run", { name: r.name })}, ${secondary}`}
         ${actionHandler({ hasHold: true })}
         @scp-action=${(ev: CustomEvent<{ action: ActionKind }>) =>
-          ev.detail.action === "hold" ? this._openMenu(r.entity_id) : off ? this._moreInfo(r.entity_id) : this._run(r)}
+          ev.detail.action === "hold" ? this._openMenuOnRelease(r.entity_id) : off ? this._moreInfo(r.entity_id) : this._run(r)}
       >
         <div class="disc"><ha-icon .icon=${this._icon(r)}></ha-icon></div>
         <div class="text">
@@ -478,6 +478,20 @@ export class ScenePulseCard extends LitElement {
     this._menuView = "main";
     await this.updateComplete;
     this._placeMenu();
+  }
+
+  /**
+   * A hold fires while the finger is still down. A popover shown then is closed again by the browser's light
+   * dismiss when the finger lifts (the press started outside it), so the menu opens once the press ends.
+   */
+  private _openMenuOnRelease(eid: string) {
+    const open = () => {
+      window.removeEventListener("pointerup", open, true);
+      window.removeEventListener("pointercancel", open, true);
+      window.setTimeout(() => this._openMenu(eid), 0);
+    };
+    window.addEventListener("pointerup", open, true);
+    window.addEventListener("pointercancel", open, true);
   }
 
   private async _openMenu(eid: string) {

@@ -24,7 +24,7 @@ It is built to sit next to the built-in Tile and Area cards without looking out 
 - **Safety alerts** — moisture, smoke, gas, CO, safety, problem, tamper: a red banner as soon as one trips (its icon blinks a few times, then stays still), and the card's edge turns red when your theme draws one.
 - **Extra readings** — optional air quality (AQI, CO₂, PM1, PM2.5, PM10, VOC, CO, NO₂, ozone and the rest of Home Assistant's air-quality classes), illuminance, pressure, power (summed), energy, noise, shown small next to the humidity under the temperature. AQI (101/151), CO₂ (1000/1500 ppm), PM2.5 (12/35 µg/m³) and PM10 (55/155 µg/m³) turn orange or red when out of range; everything else stays neutral. A sensor with no device class (a radon level, a purifier's own reading) can be added by entity with `sensor_entities`.
 - **Room modes** — optional: point `mode_entity` at a dropdown helper (`input_select` or `select`) and the card gets a row of mode buttons (normal, cooking, movie, bedtime…), drawn and behaving like Home Pulse Card's house modes: the current mode lit, names or icons only, and a second tap on the lit mode goes back to `mode_default`. What a mode does stays in your automations.
-- **Quick actions** — presets or any entity / any HA action, with tap, hold and double-tap.
+- **Quick actions** — presets for lights, covers, fans, scenes, the thermostat, media and the vacuum, or any entity / any HA action, with tap, hold and double-tap. Buttons light up with the room's state.
 - **Ambient cues** — light-coloured glow while lights are on, optional area picture blended into the background. The presence dot pings once when someone arrives; nothing loops. Transitions follow the [Pulse theme](https://github.com/zacharatos/pulse-theme)'s motion tokens when it's installed, and blinking stops with "reduce motion".
 - **Sections-ready** — `getGridOptions` for the sections view, container queries for narrow columns, a `compact` layout.
 - **Visual editor** — built on HA's own `ha-form` selectors; YAML optional.
@@ -178,17 +178,39 @@ Good to know:
 
 ### Quick actions
 
-Each item accepts `preset`, `entity`, `name`, `icon`, `color`, `tap_action`, `hold_action`, `double_tap_action`. Anything you set overrides the preset.
+Each item accepts `preset`, `entity`, `name`, `icon`, `color`, `tap_action`, `hold_action`, `double_tap_action` (and `temperature` / `step` for `climate_setpoint`). Anything you set overrides the preset.
 
-| Preset | What it does |
-| --- | --- |
-| `lights_toggle` | Turns the area's lights off if any is on, otherwise on. Highlights while any light is on. |
-| `lights_on` / `lights_off` | `light.turn_on` / `light.turn_off` targeting the area. |
-| `covers_open` / `covers_close` | `cover.open_cover` / `cover.close_cover` targeting the area. |
-| `fans_off` | `fan.turn_off` targeting the area. |
-| `media_stop` | `media_player.media_stop` targeting the area. |
-| `vacuum_area` | `vacuum.clean_area` for this area on `entity` (with confirmation). |
-| `everything_off` | `homeassistant.turn_off` targeting the area (with confirmation). |
+Quick actions are **actions on the room**, not switches: only `lights_toggle` (and `media_play_pause`) flip between two things. Their look still follows the room, so you can see at a glance what a button would act on: a lights button is lit while any light in the room is on, a covers button while any cover is open, and so on.
+
+| Preset | What it does | Lit while |
+| --- | --- | --- |
+| `lights_toggle` | **Toggles**: turns the area's lights off if any is on, otherwise on. The one to pick for an on/off lights button. | any light is on |
+| `lights_on` / `lights_off` | Only acts: `light.turn_on` / `light.turn_off` targeting the area. | any light is on |
+| `covers_open` / `covers_close` | Only acts: `cover.open_cover` / `cover.close_cover` targeting the area. | any cover is open or opening |
+| `fans_off` | Only acts: `fan.turn_off` targeting the area. | any fan is on |
+| `media_stop` | Only acts: `media_player.media_stop` targeting the area. | something is playing |
+| `media_play_pause` | **Toggles**: pauses what is playing, otherwise resumes the player paused last. With `entity`, that player's play/pause. | something is playing |
+| `media_next` | Only acts: next track on what is playing (or `entity`). | something is playing |
+| `scene` | Only acts: runs the scene in `entity` (pick one of the room's scenes). | the scene still holds: nothing it sets has changed since it ran |
+| `climate_setpoint` | With `temperature: 21`, sets 21°; with `step: 0.5` (or `-0.5`), raises (lowers) the set point, both ends of a heat/cool range; with neither, shows the set point and opens the thermostat. Targets `entity`, else the area's thermostats (the first one for a step). | at that temperature (`temperature`), or heating/cooling |
+| `vacuum_area` | Only acts: `vacuum.clean_area` for this area on `entity` (with confirmation). | the vacuum is cleaning |
+| `everything_off` | Only acts: `homeassistant.turn_off` targeting the area (with confirmation). | never: it is a last resort, not a state |
+
+With a label filter, the presets act only on the entities the card shows.
+
+```yaml
+actions:
+  - preset: lights_toggle
+  - preset: scene
+    entity: scene.living_room_movie
+  - preset: climate_setpoint
+    entity: climate.living_room
+    temperature: 21
+  - preset: climate_setpoint
+    step: -0.5
+  - preset: media_play_pause
+  - preset: media_next
+```
 
 Without a preset, an `entity` button toggles the entity (scenes and scripts run, buttons press) and hold opens more-info. Or give it any `tap_action`:
 

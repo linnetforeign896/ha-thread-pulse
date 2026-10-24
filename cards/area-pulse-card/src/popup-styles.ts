@@ -99,10 +99,17 @@ export const popupStyles = css`
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(min(220px, 100%), 1fr));
     gap: 8px;
+    min-height: 0;
+    overflow-x: hidden;
     overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
     padding: 2px;
     margin: -2px;
   }
+  /* A grid item won't shrink below its content by default: a native tile with a long name or a brightness
+     slider would push its column past the sheet (issue #28). Let it shrink, so the tile ellipsises its name. */
+  .popup-grid > * { min-width: 0; }
 
   /* Fallback tiles (only when HA's card helpers are unavailable) */
   .mini-tile {
@@ -350,14 +357,19 @@ export const popupStyles = css`
     dialog.apc-popup {
       width: 100vw;
       max-height: 85vh;
+      max-height: 85dvh;
       margin: auto 0 0 0;
     }
     .popup-surface {
       max-height: 85vh;
+      max-height: 85dvh;
       border-radius: var(--ha-dialog-border-radius, 28px) var(--ha-dialog-border-radius, 28px) 0 0;
       padding-bottom: calc(20px + env(safe-area-inset-bottom));
     }
-    .popup-grid { grid-template-columns: 1fr 1fr; }
+    /* One column of full-width tiles, like the room popup's controls; the grid scrolls, the header and
+       the bulk buttons stay put. */
+    .popup-surface:not(.room-surface) { padding-left: 16px; padding-right: 16px; }
+    .popup-grid { grid-template-columns: minmax(0, 1fr); }
 
     /* Room popup: nearly full height, one column of controls, two columns of sensor values. */
     dialog.apc-popup.room {
@@ -383,9 +395,6 @@ export const popupStyles = css`
     .room-body { padding: 0 16px calc(16px + env(safe-area-inset-bottom)); }
     .sec-grid.tiles, .sec-grid.status { grid-template-columns: 1fr; }
     .sec-grid.stats { grid-template-columns: 1fr 1fr; }
-  }
-  @media (max-width: 360px) {
-    .popup-grid { grid-template-columns: 1fr; }
   }
   @media (prefers-reduced-motion: reduce) {
     dialog.apc-popup[open] .popup-surface { animation: none; }

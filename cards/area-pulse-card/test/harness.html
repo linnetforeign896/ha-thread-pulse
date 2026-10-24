@@ -26,6 +26,7 @@
     background: #111111;
   }
   .grid { display: grid; grid-template-columns: repeat(3, 380px); gap: 16px; align-items: start; }
+  @media (max-width: 700px) { body { padding: 12px; } .grid { grid-template-columns: minmax(0, 1fr); } }
   .cap { font: 12px system-ui; color: var(--secondary-text-color); margin: 0 0 6px 2px; }
   #log { font: 12px monospace; color: var(--secondary-text-color); margin-top: 16px; white-space: pre-wrap; }
 </style>
@@ -181,6 +182,15 @@
   add(st("input_select.kitchen_mode", "Cooking", { friendly_name: "Kitchen Mode", options: ["Normal", "Cooking", "Movie", "Bedtime"] }, 3), "kitchen");
   add(st("select.bedroom_mode", "Sleep", { friendly_name: "Bedroom Mode", options: ["Normal", "Reading", "Sleep"] }, 60), "bedroom");
 
+  // Issue #28: a busy chip popup on a phone. Eleven plugs and switches with long names, four lights (sliders
+  // when on, with ?helpers=1). Tap the "Switches" or "Lights" chip at phone width.
+  const G = "games_room";
+  ["Midea Air Condition Swing Horizontal", "Midea Air Condition Swing Vertical", "Console Charging Station Smart Plug", "Projector Screen Motor Relay",
+   "Aquarium Pump", "Retro Arcade Cabinet Power Strip", "Dehumidifier Plug", "Mini Fridge", "Soundbar Subwoofer Standby Killer", "Pinball Machine", "LED Desk Mat"]
+    .forEach((n, i) => add(st(`switch.games_${i}`, i % 3 ? "off" : "on", { friendly_name: `Games Room ${n}` }, 10 + i), G));
+  ["Ceiling Spotlights Over The Pool Table", "Bar Shelf Strip", "Floor Lamp", "Wall Washer Left And Right"]
+    .forEach((n, i) => add(st(`light.games_${i}`, i < 2 ? "on" : "off", i < 2 ? { friendly_name: `Games Room ${n}`, brightness: 180 - i * 60, color_mode: "brightness", supported_color_modes: ["brightness"] } : { friendly_name: `Games Room ${n}`, supported_color_modes: ["brightness"] }, 20 + i), G));
+
   const areas = {
     living_room: { area_id: "living_room", name: "Living Room", icon: "mdi:sofa" },
     kitchen: { area_id: "kitchen", name: "Kitchen", icon: "mdi:stove" },
@@ -189,6 +199,7 @@
     den: { area_id: "den", name: "Den", icon: "mdi:desk" },
     office: { area_id: "office", name: "Office", icon: "mdi:air-purifier" },
     study: { area_id: "study", name: "Study" },
+    games_room: { area_id: "games_room", name: "Games Room", icon: "mdi:sofa" },
   };
 
   const calls = [];
@@ -223,8 +234,10 @@
           : `<span style="font-size:11px;opacity:.6">${f.type}</span>`).join("");
         const tap = c.tap_action ? `<span style="font-size:11px;opacity:.6">tap: ${c.tap_action.perform_action || c.tap_action.action}</span>` : "";
         this.style.cssText = "display:flex;align-items:center;gap:10px;min-height:44px;padding:8px 12px;border-radius:12px;border:1px dashed var(--divider-color);font:13px system-ui;box-sizing:border-box";
-        this.innerHTML = `<div style="flex:1;min-width:0"><div style="font-weight:500">${c.name}</div>${line ? `<div style="font-size:12px;opacity:.7">${line}</div>` : ""}</div>${tap}${feats}`; }
+        this.innerHTML = `<div style="flex:1;min-width:0"><div style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.name}</div>${line ? `<div style="font-size:12px;opacity:.7">${line}</div>` : ""}</div>${tap}${feats}`; }
       setConfig(c) { this.config = c; this.draw(); }
+      // Like a real tile, a click opens more-info: a stray click (issue #27) shows up in window.events.
+      connectedCallback() { if (!this._bound) { this._bound = true; this.addEventListener("click", () => this.dispatchEvent(new CustomEvent("hass-more-info", { bubbles: true, composed: true, detail: { entityId: this.config.entity } }))); } }
     });
     window.loadCardHelpers = async () => ({ createCardElement: (c) => { window.tileConfigs.push(c); const el = document.createElement("stub-tile"); el.config = c; return el; } });
   }
@@ -249,6 +262,8 @@
     { type: "custom:area-pulse-card", area: "kitchen", mode_entity: "input_select.kitchen_mode", mode_default: "Normal", actions: [{ preset: "lights_toggle" }] },
     { type: "custom:area-pulse-card", area: "kitchen", mode_entity: "input_select.kitchen_mode", show_mode_names: false, modes: [{ option: "Normal" }, { option: "Cooking", icon: "mdi:chef-hat", color: "deep-orange" }, { option: "Movie" }, { option: "Bedtime" }] },
     { type: "custom:area-pulse-card", area: "bedroom", layout: "compact", mode_entity: "select.bedroom_mode", mode_default: "Normal", actions: [{ preset: "lights_toggle" }, { preset: "covers_close" }] },
+    // Issue #28: a busy room for the chip popups at phone width (Switches: 11 with long names; Lights: sliders).
+    { type: "custom:area-pulse-card", area: "games_room", max_chips: 0, actions: [{ preset: "lights_toggle" }, { preset: "lights_off" }] },
   ];
   const grid = document.querySelector(".grid");
   window.cards = configs.map((c) => {

@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 
 import {
   balanceRows,
+  cardFeatures,
   contentParts,
   cssColor,
   defaultIconTap,
@@ -313,4 +314,21 @@ test("button_rows add rows from their own entity, after the first, with their ow
   const keys = rows.flatMap((r) => r.actions.map((a) => a.key));
   assert.equal(new Set(keys).size, keys.length);
   assert.ok(watchedEntities(config, "select.purifier_mode").has("number.purifier_level"));
+});
+
+test("features: HA's native tile features as configured, without anything HA couldn't draw (issue #17)", () => {
+  assert.deepEqual(cardFeatures({}), [], "no features unless configured: zero config stays as it is");
+  assert.deepEqual(cardFeatures({ features: [] }), []);
+  assert.deepEqual(cardFeatures({ features: [{ type: "fan-speed" }, { type: "light-brightness" }] }), [
+    { type: "fan-speed" },
+    { type: "light-brightness" },
+  ]);
+  // Options of a feature pass through untouched (same YAML as the native tile card).
+  const modes = { type: "fan-preset-modes", style: "icons", preset_modes: ["auto", "sleep"] };
+  assert.deepEqual(cardFeatures({ features: [modes] }), [modes]);
+  // Stray YAML is dropped instead of breaking the card.
+  assert.deepEqual(cardFeatures({ features: [null, "fan-speed", { style: "icons" }, { type: "" }, [], { type: "target-temperature" }] }), [
+    { type: "target-temperature" },
+  ]);
+  assert.deepEqual(cardFeatures({ features: "fan-speed" }), []);
 });

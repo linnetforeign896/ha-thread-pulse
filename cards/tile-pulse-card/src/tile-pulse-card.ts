@@ -6,6 +6,7 @@ import { styleMap } from "lit/directives/style-map.js";
 import type { ActionConfig, HassEntity, HomeAssistant, TilePulseCardConfig } from "./types";
 import {
   balanceRows,
+  cardFeatures,
   clampColumns,
   contentParts,
   cssColor,
@@ -34,6 +35,34 @@ const PENDING_MS = 8000;
 
 /** What the card picker offers first: something that usually has modes or a mode select next to it. */
 const STUB_DOMAINS = ["fan", "climate", "humidifier", "media_player", "light", "switch"];
+
+let featureLoad: Promise<boolean> | undefined;
+
+/**
+ * HA's own feature elements (`hui-card-features`) come with its tile card, which is loaded lazily. Creating
+ * one native tile through the card helpers loads them; the answer is false when they don't arrive (no card
+ * helpers, an older or changed Home Assistant), and the card then simply draws no features.
+ */
+function loadFeatureElements(entity: string): Promise<boolean> {
+  if (customElements.get("hui-card-features")) return Promise.resolve(true);
+  featureLoad ??= (async () => {
+    try {
+      const helpers = await (window as unknown as { loadCardHelpers?: () => Promise<{ createCardElement: (c: object) => unknown }> })
+        .loadCardHelpers?.();
+      if (!helpers) return false;
+      helpers.createCardElement({ type: "tile", entity });
+      await Promise.race([customElements.whenDefined("hui-card-features"), new Promise((r) => window.setTimeout(r, 5000))]);
+    } catch {
+      /* no features, the card works without them */
+    }
+    return !!customElements.get("hui-card-features");
+  })();
+  const load = featureLoad;
+  load.then((ok) => {
+    if (!ok && featureLoad === load) featureLoad = undefined; // try again with the next card
+  });
+  return load;
+}
 
 interface Pending {
   entity: string;
@@ -70,6 +99,11 @@ export class TilePulseCard extends LitElement {
   private _ticker?: number;
   /** Buttons tapped and waiting for their entity to change, by button key. */
   private _pending = new Map<string, Pending>();
+  /** HA's feature elements are there (see `loadFeatureElements`). */
+  @state() private _featuresReady = !!customElements.get("hui-card-features");
+  private _featuresRequested = false;
+  /** The context handed to HA's features, kept the same object while the entity stays the same. */
+  private _featureContext?: { entity_id: string };
 
   // ---- Lovelace API -------------------------------------------------------
 
@@ -101,15 +135,17 @@ export class TilePulseCard extends LitElement {
     if (config.state_content !== undefined && typeof config.state_content !== "string" && !Array.isArray(config.state_content)) {
       throw new Error("`state_content` must be a text or a list");
     }
+    if (config.features !== undefined && !Array.isArray(config.features)) throw new Error("`features` must be a list");
     this._config = { ...config };
     this._deps = [];
     this._clearPending();
   }
 
   getCardSize(): number {
+    const features = this._config ? cardFeatures(this._config).length : 0;
     const n = this._config?.actions?.length ?? 3;
     const extra = (this._config?.button_rows ?? []).reduce((sum, r) => sum + Math.max(1, Math.ceil((r?.actions?.length ?? 3) / 6)), 0);
-    return 2 + (n ? balanceRows(n, clampColumns(this._config?.columns)).length : 0) + extra;
+    return 2 + features + (n ? balanceRows(n, clampColumns(this._config?.columns)).length : 0) + extra;
   }
 
   getGridOptions() {
@@ -156,6 +192,13 @@ export class TilePulseCard extends LitElement {
       this._actionEntity = discoverActionEntity(hass, config);
       this._watched = watchedEntities(config, this._actionEntity);
     }
+    if (!this._featuresReady && !this._featuresRequested && cardFeatures(config).length) {
+      this._featuresRequested = true;
+      loadFeatureElements(config.entity).then((ok) => {
+        this._featuresReady = ok;
+        if (!ok) this._featuresRequested = false;
+      });
+    }
     // A tapped button stops waiting as soon as its entity changes.
     for (const [key, p] of this._pending) {
       if (hass.states[p.entity] !== p.snapshot) {
@@ -182,7 +225,7 @@ export class TilePulseCard extends LitElement {
     }
     const showActions = !(config.hide_actions_when_off && isOff(s));
     const rows = showActions ? this._rows() : [];
-    return html`<ha-card>${this._renderTile(s)}${rows.length ? this._renderActions(rows) : nothing}</ha-card>`;
+    return html`<ha-card>${this._renderTile(s)}${this._renderFeatures(s)}${rows.length ? this._renderActions(rows) : nothing}</ha-card>`;
   }
 
   private _renderTile(s: HassEntity) {
@@ -235,6 +278,21 @@ export class TilePulseCard extends LitElement {
         </div>
       </div>
     `;
+  }
+
+  /** HA's own tile features for the main entity, between the tile and the buttons (nothing until they load). */
+  private _renderFeatures(s: HassEntity) {
+    const config = this._config!;
+    const features = cardFeatures(config);
+    if (!features.length || !this._featuresReady) return nothing;
+    if (this._featureContext?.entity_id !== config.entity) this._featureContext = { entity_id: config.entity };
+    return html`<hui-card-features
+      class="features"
+      .hass=${this.hass}
+      .context=${this._featureContext}
+      .features=${features}
+      .color=${isActive(s) ? stateColor(s, config.color) : undefined}
+    ></hui-card-features>`;
   }
 
   private _rows(): ActionRow[] {

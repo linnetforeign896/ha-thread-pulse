@@ -149,6 +149,12 @@ export const cardStyles = css`
   }
 
   /* ---- The buttons ---- */
+  /* ---- Home Assistant's own tile features (a slider, fan speed), drawn by HA ---- */
+  .features {
+    display: block;
+    min-width: 0;
+  }
+
   .actions {
     display: flex;
     flex-direction: column;

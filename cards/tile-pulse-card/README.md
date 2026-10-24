@@ -17,6 +17,7 @@ It replaces the "vertical stack in card + tile + a row of buttons" recipe with o
 - **The current one is lit.** A stronger neutral fill with the colour on the icon (the family rule), and `aria-pressed` for screen readers. Option names are shown the way Home Assistant translates them; icons are guessed from the names in English and Greek (sleep, auto, manual, low, high, turbo, eco, heat, cool…).
 - **Answers at once.** A tapped mode lights up straight away and its icon breathes until the device confirms (at most a few seconds), so a slow purifier never feels like a missed tap.
 - **A native-looking tile.** Icon above the name (default) or beside it (`vertical: false`), the icon in Home Assistant's state colour while on, tap for more-info, tap the icon to toggle (only for things that are safe to toggle: never locks, covers or alarms). The line under the name shows the state and how long ago it changed by default, and can show attributes or other entities (PM2.5 next to the purifier's state).
+- **Native features too.** `features` puts Home Assistant's own tile features (a brightness slider, fan speed, target temperature…) between the tile and the buttons, in the same YAML as the native tile card.
 - **Quiet when it should be.** `hide_actions_when_off: true` hides the buttons while the main entity is off. Buttons whose entity is unavailable are dimmed and do nothing.
 - **Fits any width.** Buttons balance into rows (5 on 4 columns → 3 + 2); on narrow cards the names go under the icons. Icon-only with `show_names: false`.
 - **Pulse theme ready.** Every colour, radius and motion reads the shared `--pulse-*` tokens first, then your theme's variables.
@@ -52,6 +53,7 @@ entity: switch.living_room_purifier
 | `button_rows` | – | More rows of buttons under the first. Each: `action_entity` (its buttons come from this entity's options, and its buttons with an `option` set it), `actions` (its own buttons, as below), `columns` (default: the card's). |
 | `show_names` | `true` | Names on the buttons. |
 | `hide_actions_when_off` | `false` | Hide the buttons while the main entity is off or unavailable. |
+| `features` | — | Home Assistant's own tile features for the main entity, between the tile and the buttons: the same list as the native tile card's `features` (see *Features* below). |
 
 ### Buttons
 
@@ -118,6 +120,30 @@ actions:
       action: navigate
       navigation_path: recipes
 ```
+
+### Features
+
+The native tile card's [features](https://www.home-assistant.io/dashboards/features/) work here too, drawn by Home Assistant itself between the tile and the buttons: a purifier's fan speed as a slider and its modes as buttons, in one card.
+
+```yaml
+type: custom:tile-pulse-card
+entity: fan.purifier
+features:
+  - type: fan-speed
+```
+
+```yaml
+type: custom:tile-pulse-card
+entity: light.kitchen
+vertical: false
+features:
+  - type: light-brightness
+actions:
+  - entity: scene.kitchen_cooking
+    icon: mdi:chef-hat
+```
+
+Any feature the native tile card accepts for that entity works, with its own options. In the visual editor, *Features* takes the same list as YAML. If Home Assistant's feature elements can't be loaded, the card simply leaves them out.
 
 ## Theming
 

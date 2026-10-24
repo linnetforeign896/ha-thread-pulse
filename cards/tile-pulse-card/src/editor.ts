@@ -107,6 +107,7 @@ export class TilePulseCardEditor extends LitElement {
           },
           { name: "state_content", selector: { select: { multiple: true, reorder: true, mode: "list", options: contentOptions } } },
           { name: "info_entities", selector: { entity: { multiple: true } } },
+          { name: "features", selector: { object: {} } },
         ],
       },
       {

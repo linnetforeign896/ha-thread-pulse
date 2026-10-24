@@ -66,7 +66,7 @@ Config type (`types.ts`) and `setConfig` validation → pure logic in `scenes.ts
 - **Undo** calls `scene.create` with `scene_id: scene_pulse_undo` and the scene's own entities just before the run, so Undo puts back exactly what the run changed. It is one shared scene: the last run from any card or browser wins, and it lives in memory until Home Assistant restarts. If the snapshot fails, the run still happens, without Undo. With `confirm`, the snapshot is taken before HA's dialog and the toast waits until the scene's last-run time actually moves.
 - **Update from now** re-reads the stored config, replaces each entity's target with its current state and attributes (minus descriptive ones, `NOT_STATE`), and posts it back; HA reloads scenes itself. It needs a second tap in the menu, because it can't be undone from the card.
 - **House mode**: the same discovery as Home Pulse Card (`mode_entity`, else a visible `input_select`/`select` ending in `house_mode` or `home_mode`). A scene belongs to the current mode when it carries a label whose name or id reads like the mode's option, ignoring case, accents, spaces and underscores. Those scenes get their own first section; the mode's labels are skipped when grouping by label.
-- **The menu** is a `popover="auto"` element (top layer, nothing clips it), placed from the ⋯ button; "What it sets" is a second view inside the same popover.
+- **The menu** is a `popover="auto"` element (top layer, nothing clips it), placed from the ⋯ button; "What it sets" is a second view inside the same popover. A hold on a row opens it only once the press ends (`_openMenuOnRelease`): shown while the finger is still down, the browser's light dismiss closes it again when the finger lifts (issue #27).
 
 ## Where it can evolve
 

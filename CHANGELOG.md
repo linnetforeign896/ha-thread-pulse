@@ -4,6 +4,27 @@ Every release of Pulse Cards, newest first. The bundle has one version; the chan
 
 Sections inside a version, only those that apply: **All cards**, **Area Pulse Card**, **Home Pulse Card**, **Home Pulse Shortcuts**, **Tile Pulse Card**, **Scene Pulse Card**, and one for each new card as it arrives (a new card's first entry is under *Added* in the release that brings it). Inside a section: *Added*, *Changed*, *Fixed*, *Removed*, and **Breaking** first when there is something the user has to act on.
 
+## [1.3.0] - 2026-10-23
+
+### All cards
+
+- **Fixed:** on a phone, a tap or a hold that opens something (a popup, Home Assistant's more-info dialog, Scene Pulse's menu) no longer also taps whatever appears under your finger. Every card's buttons now act on the tap itself, the way Home Assistant's own cards do. ([#27](https://github.com/zacharatos/pulse-cards/issues/27))
+
+### Area Pulse Card
+
+- **Fixed:** on a phone, tapping the card no longer also taps the room popup row under your finger. ([#27](https://github.com/zacharatos/pulse-cards/issues/27))
+- **Fixed:** chip popups on a phone show one column of tiles that fits the screen, instead of running off the edge; long names are shortened and the list scrolls inside the sheet. ([#28](https://github.com/zacharatos/pulse-cards/issues/28))
+- **Changed:** quick actions show the room's state where it makes sense: *Lights on* / *Lights off* light up while a light is on, the cover buttons while a cover is open, *Fans off* while a fan runs. They still only act; *Lights* (`lights_toggle`) is the one that toggles, and the editor now calls it *Lights on/off (toggle)*. *All off* never lights up. ([#4](https://github.com/zacharatos/pulse-cards/issues/4))
+- **Added:** quick actions for scenes, the thermostat and media: `scene` (one of the room's scenes, lit while it still holds), `climate_setpoint` (`temperature: 21` to set a value, or `step: 0.5` / `-0.5` to nudge it), `media_play_pause` and `media_next`. In the editor's preset list. ([#16](https://github.com/zacharatos/pulse-cards/issues/16))
+
+### Tile Pulse Card
+
+- **Added:** `features`: Home Assistant's own tile features (a brightness slider, fan speed, target temperature…) between the tile and the buttons, in the same YAML as the native tile card. In the editor under *Tile*. ([#17](https://github.com/zacharatos/pulse-cards/issues/17))
+
+### Scene Pulse Card
+
+- **Fixed:** holding a scene opens its menu and the menu stays open; before, it closed again as soon as you let go. ([#27](https://github.com/zacharatos/pulse-cards/issues/27))
+
 ## [1.2.0] - 2026-10-13
 
 ### Area Pulse Card
@@ -66,6 +87,7 @@ Sections inside a version, only those that apply: **All cards**, **Area Pulse Ca
 
 - Same as `scene-pulse-card` v0.1.0, the last release of its own repository.
 
+[1.3.0]: https://github.com/zacharatos/pulse-cards/releases/tag/v1.3.0
 [1.2.0]: https://github.com/zacharatos/pulse-cards/releases/tag/v1.2.0
 [1.1.0]: https://github.com/zacharatos/pulse-cards/releases/tag/v1.1.0
 [1.0.0]: https://github.com/zacharatos/pulse-cards/releases/tag/v1.0.0

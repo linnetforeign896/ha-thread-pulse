@@ -288,7 +288,7 @@ export class AreaPulseCardEditor extends LitElement {
             mode: "dropdown",
             options: [
               { value: "", label: t("ed_preset_none") },
-              ...PRESETS.map((p) => ({ value: p, label: t(`preset_${p}`) })),
+              ...PRESETS.map((p) => ({ value: p, label: t(p === "lights_toggle" ? "ed_preset_lights_toggle" : `preset_${p}`) })),
             ],
           },
         },
@@ -303,12 +303,60 @@ export class AreaPulseCardEditor extends LitElement {
       },
       {
         name: "entity",
-        selector: { entity: a.preset === "vacuum_area" ? { filter: { domain: "vacuum" } } : {} },
+        selector: { entity: this._entityFilter(a) },
       },
+      ...(a.preset === "climate_setpoint"
+        ? [
+            {
+              type: "grid",
+              name: "",
+              schema: [
+                { name: "temperature", selector: { number: { mode: "box", step: 0.5 } } },
+                { name: "step", selector: { number: { mode: "box", step: 0.1, min: -10, max: 10 } } },
+              ],
+            },
+          ]
+        : []),
       { name: "color", selector: { ui_color: {} } },
       { name: "tap_action", selector: { ui_action: {} } },
       { name: "hold_action", selector: { ui_action: {} } },
     ];
+  }
+
+  /** Which entities the action's entity picker offers: the preset's domain, and for a scene the room's own. */
+  private _entityFilter(a: QuickActionConfig): Record<string, unknown> {
+    const domain = (
+      { vacuum_area: "vacuum", scene: "scene", climate_setpoint: "climate", media_play_pause: "media_player", media_next: "media_player" } as Record<string, string>
+    )[a.preset ?? ""];
+    if (!domain) return {};
+    if (domain === "scene" && this.hass && this._config?.area) {
+      const area = this._config.area;
+      const ids = Object.values(this.hass.entities ?? {})
+        .filter((e) => e.entity_id.startsWith("scene.") && (e.area_id ?? (e.device_id ? this.hass!.devices?.[e.device_id]?.area_id : undefined)) === area)
+        .map((e) => e.entity_id);
+      if (ids.length) return { include_entities: ids };
+    }
+    return { filter: { domain } };
+  }
+
+  /** A line under the preset picker for the presets that need explaining. */
+  private _presetHint(a: QuickActionConfig): string | undefined {
+    switch (a.preset) {
+      case "vacuum_area":
+        return this._t("ed_vacuum_hint");
+      case "lights_on":
+      case "lights_off":
+        return this._t("ed_lights_hint", { dir: this._t(a.preset === "lights_on" ? "ed_dir_on" : "ed_dir_off") });
+      case "scene":
+        return this._t("ed_scene_hint");
+      case "climate_setpoint":
+        return this._t("ed_climate_hint");
+      case "media_play_pause":
+      case "media_next":
+        return this._t("ed_media_hint");
+      default:
+        return undefined;
+    }
   }
 
   private _label = (s: { name: string }) => {
@@ -355,6 +403,8 @@ export class AreaPulseCardEditor extends LitElement {
       double_tap_action: "ed_double_tap_action",
       preset: "ed_preset",
       entity: "ed_entity",
+      temperature: "ed_temperature",
+      step: "ed_step",
     };
     return map[s.name] ? this._t(map[s.name]) : s.name;
   };
@@ -528,7 +578,7 @@ export class AreaPulseCardEditor extends LitElement {
         ${open
           ? html`
               <div class="action-body">
-                ${a.preset === "vacuum_area" ? html`<p class="hint">${this._t("ed_vacuum_hint")}</p>` : nothing}
+                ${this._presetHint(a) ? html`<p class="hint">${this._presetHint(a)}</p>` : nothing}
                 <ha-form
                   .hass=${this.hass}
                   .data=${{ preset: "", ...a }}

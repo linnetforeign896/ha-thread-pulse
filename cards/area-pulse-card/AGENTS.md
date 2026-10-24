@@ -58,8 +58,8 @@ Don't write a commit message unless he asks for one. If he does, offer it as a s
 | `src/room.ts` | Pure layout logic for the room popup: `buildRoom` (which sections, in which order, with which entities), `roomLabels` (short names, device caption on duplicates), `matchesQuery`, `isActiveState`. |
 | `src/labels.ts` | Pure label-filter logic (`resolveLabelFilter`, `passesLabelFilter`) and the cached `config/label_registry/list` call. |
 | `src/modes.ts` | Pure logic for the room modes row (`resolveModes`, `defaultMode`, `guessModeIcon`). A copy of Home Pulse Card's `modes.ts` (a card never imports another card's `src/`): keep the keys, behaviour and icon guesses identical in both, and change them together. The one difference: a room's mode selector is never guessed, only `mode_entity` / `modes` turn the row on. |
-| `src/presets.ts` | Quick-action presets (`lights_toggle`, `vacuum_area`, ...) resolved to a name, icon, state and Home Assistant action. |
-| `src/action-handler.ts` | Tap / hold / double-tap handling that hands off to Home Assistant's own `hass-action` event. |
+| `src/presets.ts` | Quick-action presets (`lights_toggle`, `vacuum_area`, `scene`, `climate_setpoint`, `media_play_pause`, ...) resolved to a name, icon, state and Home Assistant action; `sceneHolds` (a copy of Scene Pulse Card's `untouchedSince`: change them together), `mediaTargets`, `climateSetpoint`. |
+| `src/action-handler.ts` | Tap / hold / double-tap handling that hands off to Home Assistant's own `hass-action` event. A tap comes from `click`, never `pointerup` (see *Taps that open things*). |
 | `src/editor.ts` | The visual editor, built on `ha-form` selectors. Schema functions, plus `_formData` / `_mainChanged` which map form values to and from the YAML config. |
 | `src/types.ts` | Config types (`AreaPulseCardConfig`, `QuickActionConfig`, `PresetId`), the slice of the Home Assistant frontend API the card uses. |
 | `src/localize.ts` | All user-facing strings, `en` and `el`, and `localize(hass, key, vars)`. |
@@ -133,8 +133,30 @@ Tapping the card header opens a popup with everything in the room. It exists bec
 - **Names are shortened for the room** (`roomLabels`): area prefix dropped everywhere, device prefix dropped for sensors, device name shown as a caption only when two cells would read the same.
 - **It is built from the filtered index**, so `label_filter` applies for free. Never read `hass.entities` directly in the popup.
 - **Mobile first**: one column of controls, two of sensor values, 44px touch targets, sticky section headers, search and close always reachable, nearly full-height bottom sheet.
+- **The group (chip) popup reads the same on phones**: one column of full-width tiles (`minmax(0, 1fr)`, and `min-width: 0` on the tiles so a long name or a slider ellipsises instead of widening the grid, issue #28); only the grid scrolls, the header and bulk buttons stay put.
 - **A configured action wins**: the popup is the default for a header tap when `tap_action` is not set; `room_popup: false` or any `tap_action` turns it off. Don't make the popup swallow a configured action.
 - Opening more-info steps the popup aside and restores it (and its scroll position) after `dialog-closed`. Keep that.
+
+## Quick actions: which ones are lit (decided October 2026, issue #4)
+
+Quick actions are actions on the room, deliberately not toggles; only `lights_toggle` and `media_play_pause` flip. Their look follows the room so a button shows what it would act on, with the same colour language as the chips (gold means "a light is on here"):
+
+| Preset | Lit while |
+| --- | --- |
+| `lights_toggle`, `lights_on`, `lights_off` | any light in scope is on |
+| `covers_open`, `covers_close` | any cover is open or opening |
+| `fans_off` | any fan is on |
+| `media_stop`, `media_play_pause`, `media_next` | something in scope is playing |
+| `vacuum_area` | the vacuum is cleaning |
+| `scene` | the scene still holds (`sceneHolds`: nothing it sets changed since it ran, 15 s to settle) |
+| `climate_setpoint` | with `temperature`: every targeted thermostat is on and at it; otherwise: heating or cooling |
+| `everything_off` | never: a last resort with a confirmation, not a state |
+
+Lit follows *what the button acts on*, not *which way it acts*: `lights_off` is lit while lights are on, not when they are off (that would paint a gold "lights on" signal on a dark room). A new preset gets a row here and a test in `test/presets.test.mjs`.
+
+## Taps that open things (read before touching `action-handler.ts`)
+
+A tap is emitted on the element's own `click`, never on `pointerup`. On a touch screen the browser sends `click` (with `mousedown`/`mouseup`) after the finger lifts and hit-tests the spot again; when a tap opened the room popup on `pointerup`, that `click` landed on whatever popup row was under the finger (issue #27). `click` is the last event of a tap, so nothing a tap opens can receive it. A hold fires while the finger is down, so after a hold the handler swallows the next `click` on the page (once, within 450 ms). Keyboard: a native `<button>` turns Enter/Space into a `click` (a `click` with `detail === 0` is a keyboard or assistive-technology tap and skips the double-tap wait); other elements handle the keys themselves. `test/action-handler.test.mjs` covers this; Playwright with `hasTouch` and `page.touchscreen.tap()` reproduces the real ghost click. Every card has its own copy of the handler: keep them identical apart from the prefix.
 
 ## The label filter (read before touching discovery)
 
@@ -157,7 +179,7 @@ Ideas the maintainer and users have discussed or that fit the card's direction. 
 - **Energy chip** (power now, energy today) using the area's power and energy sensors.
 - **Occupancy nudges**: "lights on, room empty for 20 min", with a one-tap fix.
 - **Floor mode** or a multi-area strip built from the same index logic.
-- More **presets** (scenes, climate set-points, media transport) and more **locales**.
+- More **locales**.
 
 Keep the principles above when extending: zero config first, native look, explicit config wins, fast in big homes.
 

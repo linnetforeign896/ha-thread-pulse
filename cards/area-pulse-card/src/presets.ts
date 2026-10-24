@@ -1,4 +1,4 @@
-import type { ActionConfig, AreaRegistryEntry, HomeAssistant, PresetId, QuickActionConfig } from "./types";
+import type { ActionConfig, AreaRegistryEntry, HassEntity, HomeAssistant, PresetId, QuickActionConfig } from "./types";
 import type { Group, AreaIndex } from "./discovery";
 import { localize } from "./localize";
 
@@ -12,6 +12,10 @@ export const PRESETS: PresetId[] = [
   "media_stop",
   "vacuum_area",
   "everything_off",
+  "scene",
+  "climate_setpoint",
+  "media_play_pause",
+  "media_next",
 ];
 
 export interface ResolvedAction {
@@ -87,7 +91,10 @@ export function resolveAction(
           ...extra,
         }
       : areaAction(service, area.area_id, extra);
+  // An area preset is lit while what it acts on is on (any light on, any cover open), whichever way it
+  // acts: the colour says "lights are on here", like the chip. `everything_off` stays unlit.
   const lightsOn = (groups.lights?.active.length ?? 0) > 0;
+  const coversOpen = (groups.covers?.active.length ?? 0) > 0;
   const stateObj = cfg.entity ? hass.states[cfg.entity] : undefined;
   let base: Omit<ResolvedAction, "hold_action" | "double_tap_action">;
 
@@ -106,7 +113,7 @@ export function resolveAction(
       base = {
         name: localize(hass, "preset_lights_on"),
         icon: "mdi:lightbulb-on-outline",
-        active: false,
+        active: lightsOn,
         color: "var(--apc-amber)",
         disabled: !groups.lights,
         tap_action: scoped("light.turn_on", "lights"),
@@ -116,7 +123,7 @@ export function resolveAction(
       base = {
         name: localize(hass, "preset_lights_off"),
         icon: "mdi:lightbulb-off-outline",
-        active: false,
+        active: lightsOn,
         color: "var(--apc-amber)",
         disabled: !groups.lights,
         tap_action: scoped("light.turn_off", "lights"),
@@ -126,7 +133,7 @@ export function resolveAction(
       base = {
         name: localize(hass, "preset_covers_open"),
         icon: "mdi:window-shutter-open",
-        active: false,
+        active: coversOpen,
         color: "var(--apc-purple)",
         disabled: !groups.covers,
         tap_action: scoped("cover.open_cover", "covers"),
@@ -136,7 +143,7 @@ export function resolveAction(
       base = {
         name: localize(hass, "preset_covers_close"),
         icon: "mdi:window-shutter",
-        active: false,
+        active: coversOpen,
         color: "var(--apc-purple)",
         disabled: !groups.covers,
         tap_action: scoped("cover.close_cover", "covers"),
@@ -146,7 +153,7 @@ export function resolveAction(
       base = {
         name: localize(hass, "preset_fans_off"),
         icon: "mdi:fan-off",
-        active: false,
+        active: (groups.fans?.active.length ?? 0) > 0,
         color: "var(--apc-cyan)",
         disabled: !groups.fans,
         tap_action: scoped("fan.turn_off", "fans"),
@@ -199,13 +206,60 @@ export function resolveAction(
         },
       };
       break;
+    case "scene": {
+      const holds = !!stateObj && sceneHolds(hass, stateObj);
+      base = {
+        name: entityName(stateObj, cfg.entity, areaName) || localize(hass, "preset_scene"),
+        icon: (stateObj?.attributes.icon as string | undefined) || "mdi:palette",
+        active: holds,
+        color: "var(--apc-accent)",
+        disabled: !stateObj || stateObj.state === "unavailable",
+        tap_action: cfg.entity
+          ? { action: "perform-action", perform_action: "scene.turn_on", target: { entity_id: cfg.entity } }
+          : { action: "none" },
+      };
+      break;
+    }
+    case "climate_setpoint": {
+      base = climateSetpoint(hass, cfg, index, groups, scoped);
+      break;
+    }
+    case "media_play_pause": {
+      const t = mediaTargets(hass, cfg, groups);
+      base = {
+        name: localize(hass, t.playing ? "preset_media_pause" : "preset_media_play"),
+        icon: t.playing ? "mdi:pause" : "mdi:play",
+        active: t.playing,
+        color: "var(--apc-indigo)",
+        disabled: !t.targets.length,
+        tap_action: t.targets.length
+          ? {
+              action: "perform-action",
+              perform_action: cfg.entity ? "media_player.media_play_pause" : t.playing ? "media_player.media_pause" : "media_player.media_play",
+              target: { entity_id: t.targets },
+            }
+          : { action: "none" },
+      };
+      break;
+    }
+    case "media_next": {
+      const t = mediaTargets(hass, cfg, groups);
+      base = {
+        name: localize(hass, "preset_media_next"),
+        icon: "mdi:skip-next",
+        active: t.playing,
+        color: "var(--apc-indigo)",
+        disabled: !t.targets.length,
+        tap_action: t.targets.length
+          ? { action: "perform-action", perform_action: "media_player.media_next_track", target: { entity_id: t.targets } }
+          : { action: "none" },
+      };
+      break;
+    }
     default: {
       const domain = cfg.entity?.split(".")[0] ?? "";
       base = {
-        name:
-          (stateObj?.attributes.friendly_name as string | undefined)?.replace(new RegExp(`^${escapeRe(areaName)}\\s*`, "i"), "") ||
-          cfg.entity ||
-          "Action",
+        name: entityName(stateObj, cfg.entity, areaName) || "Action",
         icon: (stateObj?.attributes.icon as string | undefined) || DEFAULT_ICONS[domain] || "mdi:gesture-tap",
         active: !!stateObj && TOGGLE_ON_STATES.has(stateObj.state),
         color: "var(--apc-accent)",
@@ -224,6 +278,146 @@ export function resolveAction(
     hold_action: cfg.hold_action ?? (cfg.entity ? { action: "more-info", entity: cfg.entity } : undefined),
     double_tap_action: cfg.double_tap_action,
     entity: cfg.entity,
+  };
+}
+
+/** An entity's name for a button: its friendly name without the area in front, else its ID. */
+function entityName(s: HassEntity | undefined, entity: string | undefined, areaName: string): string {
+  return (
+    (s?.attributes.friendly_name as string | undefined)?.replace(new RegExp(`^${escapeRe(areaName)}\\s*`, "i"), "") ||
+    entity ||
+    ""
+  );
+}
+
+/** How long a scene's entities may take to settle after it ran before a change counts as "touched". */
+const SCENE_SETTLE_MS = 15_000;
+/** Domains whose attributes change when someone adjusts them (dimming, moving a blind), not only their state. */
+const ATTRIBUTE_DOMAINS = new Set(["light", "cover", "fan", "climate", "media_player"]);
+
+/**
+ * A scene still holds while nothing it sets has changed since it ran (and settled). The same rule as Scene
+ * Pulse Card's `untouchedSince` (a card never imports another card's code: change them together).
+ */
+export function sceneHolds(hass: HomeAssistant, s: HassEntity, settleMs = SCENE_SETTLE_MS): boolean {
+  const ran = Date.parse(s.state);
+  if (Number.isNaN(ran)) return false;
+  const members = Array.isArray(s.attributes.entity_id) ? (s.attributes.entity_id as string[]) : [];
+  if (!members.length) return false;
+  return members.every((id) => {
+    const m = hass.states[id];
+    if (!m || m.state === "unavailable") return false;
+    const changed = Date.parse(ATTRIBUTE_DOMAINS.has(id.split(".")[0]) ? m.last_updated : m.last_changed);
+    return Number.isNaN(changed) || changed <= ran + settleMs;
+  });
+}
+
+/**
+ * The players a media preset acts on: its `entity`, or the area's players that are playing, or else the
+ * one paused most recently (so "play" resumes what you paused, not every speaker in the room).
+ */
+export function mediaTargets(
+  hass: HomeAssistant,
+  cfg: QuickActionConfig,
+  groups: Partial<Record<string, Group>>
+): { targets: string[]; playing: boolean } {
+  if (cfg.entity) {
+    const s = hass.states[cfg.entity];
+    const ok = !!s && s.state !== "unavailable";
+    return { targets: ok ? [cfg.entity] : [], playing: s?.state === "playing" };
+  }
+  const media = groups.media;
+  if (!media) return { targets: [], playing: false };
+  if (media.active.length) return { targets: [...media.active], playing: true };
+  const paused = media.entities
+    .filter((id) => hass.states[id]?.state === "paused")
+    .sort((a, b) => Date.parse(hass.states[b].last_changed) - Date.parse(hass.states[a].last_changed));
+  return { targets: paused.slice(0, 1), playing: false };
+}
+
+const HEATING = new Set(["heating", "cooling", "drying", "fan"]);
+
+/** A number for the button: "21°", "21.5°", "+0.5°", "−1°". */
+function degrees(n: number, signed = false): string {
+  const v = Math.round(n * 10) / 10;
+  const text = `${Math.abs(v)}°`;
+  return signed ? `${v < 0 ? "−" : "+"}${text}` : `${v < 0 ? "−" : ""}${text}`;
+}
+
+/**
+ * `climate_setpoint`: with `temperature`, set that value (lit while the thermostat is at it); with `step`,
+ * move the current set point up or down (both ends of a heat/cool range); with neither, show the set point
+ * and open the thermostat. Targets `entity`, else the area's thermostats (the first one for a step).
+ */
+export function climateSetpoint(
+  hass: HomeAssistant,
+  cfg: QuickActionConfig,
+  index: AreaIndex,
+  groups: Partial<Record<string, Group>>,
+  scoped: (service: string, groupId: string, extra?: Partial<ActionConfig>) => ActionConfig
+): Omit<ResolvedAction, "hold_action" | "double_tap_action"> {
+  const area = groups.climate?.entities ?? index.primary.filter((id) => id.startsWith("climate."));
+  const targets = cfg.entity ? [cfg.entity] : area;
+  const states = targets.map((id) => hass.states[id]).filter((s): s is HassEntity => !!s && s.state !== "unavailable");
+  const main = states[0];
+  const heating = states.some((s) => HEATING.has(String(s.attributes.hvac_action ?? "")));
+  const common = { color: "var(--apc-orange)", disabled: !main };
+  const temperature = typeof cfg.temperature === "number" && Number.isFinite(cfg.temperature) ? cfg.temperature : undefined;
+  const step = typeof cfg.step === "number" && Number.isFinite(cfg.step) && cfg.step !== 0 ? cfg.step : undefined;
+
+  if (temperature !== undefined) {
+    const data = { temperature };
+    return {
+      ...common,
+      name: degrees(temperature),
+      icon: "mdi:thermometer",
+      active: states.length > 0 && states.every((s) => s.state !== "off" && s.attributes.temperature === temperature),
+      tap_action: cfg.entity
+        ? { action: "perform-action", perform_action: "climate.set_temperature", target: { entity_id: cfg.entity }, data }
+        : scoped("climate.set_temperature", "climate", { data }),
+    };
+  }
+
+  const attr = (s: HassEntity | undefined, k: string) => {
+    const v = s?.attributes[k];
+    return typeof v === "number" && Number.isFinite(v) ? v : undefined;
+  };
+  if (step !== undefined) {
+    const target = attr(main, "temperature");
+    const low = attr(main, "target_temp_low");
+    const high = attr(main, "target_temp_high");
+    const unitStep = attr(main, "target_temp_step") ?? (Math.abs(step) >= 1 ? 1 : 0.5);
+    const min = attr(main, "min_temp") ?? -Infinity;
+    const max = attr(main, "max_temp") ?? Infinity;
+    const move = (v: number) => {
+      const next = Math.round((v + step) / unitStep) * unitStep;
+      return Math.round(Math.min(max, Math.max(min, next)) * 100) / 100;
+    };
+    const data =
+      target !== undefined
+        ? { temperature: move(target) }
+        : low !== undefined && high !== undefined
+        ? { target_temp_low: move(low), target_temp_high: move(high) }
+        : undefined;
+    return {
+      ...common,
+      name: degrees(step, true),
+      icon: step > 0 ? "mdi:thermometer-plus" : "mdi:thermometer-minus",
+      active: heating,
+      disabled: !main || !data,
+      tap_action: main && data
+        ? { action: "perform-action", perform_action: "climate.set_temperature", target: { entity_id: main.entity_id }, data }
+        : { action: "none" },
+    };
+  }
+
+  const target = attr(main, "temperature");
+  return {
+    ...common,
+    name: target !== undefined ? degrees(target) : localize(hass, "preset_climate_setpoint"),
+    icon: "mdi:thermostat",
+    active: heating,
+    tap_action: main ? { action: "more-info", entity: main.entity_id } : { action: "none" },
   };
 }
 
